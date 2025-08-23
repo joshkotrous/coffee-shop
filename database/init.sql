@@ -38,9 +38,8 @@ CREATE TABLE order_items (
     unit_price DECIMAL(10,2) NOT NULL
 );
 
--- Insert admin user (password: admin123)
-INSERT INTO users (email, password, role) VALUES 
-('admin@coffeeshop.com', '$2b$10$JFOxpAPWAXV1CgS/TmHzAOMcVCGopdJxSzOSTv023t.kTCcNj1OLi', 'admin');
+-- Removed default admin user insertion to prevent hardcoded credentials vulnerability
+-- Admin user should be created securely post-deployment via application or secure setup process
 
 -- Insert sample products
 INSERT INTO products (name, description, price, image_url, stock_quantity) VALUES 
