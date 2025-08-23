@@ -3,6 +3,12 @@
 # Coffee Shop Agent Setup Script
 # This script sets up the entire application in one go for automated deployment
 
+# Check if JWT_SECRET environment variable is set
+if [ -z "$JWT_SECRET" ]; then
+  echo "❌ JWT_SECRET environment variable is not set. Please set it before running this script."
+  exit 1
+fi
+
 echo "🚀 Starting Coffee Shop automated setup..."
 
 # Step 1: Install dependencies
@@ -13,7 +19,7 @@ npm install
 echo "⚙️  Creating environment configuration..."
 cat > .env.local << EOF
 DATABASE_URL=postgresql://admin:password@localhost:5432/coffee_shop
-JWT_SECRET=coffee-shop-secret-key-2024
+JWT_SECRET=$JWT_SECRET
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 EOF
 
