@@ -10,11 +10,20 @@ echo "📦 Installing Node.js dependencies..."
 npm install
 
 # Step 2: Create environment file
-echo "⚙️  Creating environment configuration..."
+# Instead of hardcoding sensitive credentials, read them from environment variables
+# Fail if required environment variables are not set
+
+if [ -z "$DATABASE_URL" ] || [ -z "$JWT_SECRET" ] || [ -z "$NEXT_PUBLIC_APP_URL" ]; then
+    echo "❌ Required environment variables DATABASE_URL, JWT_SECRET, or NEXT_PUBLIC_APP_URL are not set."
+    echo "Please set them before running this script."
+    exit 1
+fi
+
+echo "⚙️  Creating environment configuration from environment variables..."
 cat > .env.local << EOF
-DATABASE_URL=postgresql://admin:password@localhost:5432/coffee_shop
-JWT_SECRET=coffee-shop-secret-key-2024
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+DATABASE_URL=$DATABASE_URL
+JWT_SECRET=$JWT_SECRET
+NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 EOF
 
 # Step 3: Start database
