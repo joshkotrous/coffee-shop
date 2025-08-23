@@ -26,9 +26,8 @@ docker compose up -d
 echo "Waiting for database to initialize..."
 sleep 10
 
+# Removed printing of default admin credentials to avoid exposing sensitive information
+
 echo "Setup complete! You can now run:"
 echo "  npm run dev"
 echo ""
-echo "Default admin credentials:"
-echo "  Email: admin@coffeeshop.com"
-echo "  Password: admin123"
