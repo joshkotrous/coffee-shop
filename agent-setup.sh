@@ -3,6 +3,15 @@
 # Coffee Shop Agent Setup Script
 # This script sets up the entire application in one go for automated deployment
 
+# Function to securely prompt for admin credentials
+prompt_admin_credentials() {
+    echo "👤 Please enter the default admin credentials manually to avoid exposure:"
+    read -p "   Email: " ADMIN_EMAIL
+    read -sp "   Password: " ADMIN_PASSWORD
+    echo ""
+    echo "⚠️  Make sure to keep these credentials secure and do not share them publicly."
+}
+
 echo "🚀 Starting Coffee Shop automated setup..."
 
 # Step 1: Install dependencies
@@ -41,12 +50,15 @@ echo "📍 Application will be available at:"
 echo "   - Primary:  http://localhost:3000"
 echo "   - Fallback: http://localhost:3001 (if port 3000 is occupied)"
 echo ""
-echo "👤 Default admin credentials:"
-echo "   Email: admin@coffeeshop.com"
-echo "   Password: admin123"
+
+# Prompt for admin credentials securely instead of printing them
+prompt_admin_credentials
+
+# Instructions for testing setup without exposing credentials
 echo ""
-echo "🎯 To test the setup, run these commands in a new terminal:"
-echo "   curl -X POST http://localhost:3000/api/auth/login -H 'Content-Type: application/json' -d '{\"email\": \"admin@coffeeshop.com\", \"password\": \"admin123\"}'"
+echo "🎯 To test the setup, use your entered admin credentials to authenticate."
+echo "   For example, run these commands in a new terminal (replace with your credentials):"
+echo "   curl -X POST http://localhost:3000/api/auth/login -H 'Content-Type: application/json' -d '{\"email\": \"$ADMIN_EMAIL\", \"password\": \"$ADMIN_PASSWORD\"}'"
 echo "   curl http://localhost:3000/api/products"
 echo ""
 echo "🚀 Starting development server..."
