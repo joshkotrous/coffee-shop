@@ -24,7 +24,7 @@ interface CartItem {
 }
 
 export default function Home() {
-  const { user, logout, loading } = useAuth();
+  const { user, logout, loading, isAdmin } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showLogin, setShowLogin] = useState(true);
@@ -181,7 +181,7 @@ export default function Home() {
 
           <div className="flex items-center gap-4">
             <span className="text-gray-600">Welcome, {user.email}</span>
-            {user.role === "admin" && (
+            {isAdmin && (
               <Link
                 href="/admin"
                 className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
