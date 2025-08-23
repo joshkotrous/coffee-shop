@@ -2,7 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/middleware";
 
-export async function GET() {
+function enforceHttps(request: NextRequest) {
+  // Check if the request is secure (HTTPS)
+  // In Next.js middleware, request.nextUrl.protocol includes the scheme
+  if (request.nextUrl.protocol !== "https:") {
+    // Redirect to the HTTPS version of the URL
+    const httpsUrl = new URL(request.url);
+    httpsUrl.protocol = "https:";
+    return NextResponse.redirect(httpsUrl);
+  }
+  return null;
+}
+
+export async function GET(request: NextRequest) {
+  // Enforce HTTPS
+  const httpsRedirect = enforceHttps(request);
+  if (httpsRedirect) return httpsRedirect;
+
   try {
     const result = await query(
       "SELECT * FROM products ORDER BY created_at DESC"
@@ -25,6 +41,10 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  // Enforce HTTPS
+  const httpsRedirect = enforceHttps(request);
+  if (httpsRedirect) return httpsRedirect;
+
   try {
     requireAdmin(request);
 
