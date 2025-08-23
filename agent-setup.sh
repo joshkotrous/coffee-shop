@@ -3,6 +3,23 @@
 # Coffee Shop Agent Setup Script
 # This script sets up the entire application in one go for automated deployment
 
+# Load sensitive credentials from environment variables or prompt user
+if [ -z "$DATABASE_URL" ]; then
+  echo "Enter your DATABASE_URL (e.g., postgresql://user:password@host:port/dbname):"
+  read -r DATABASE_URL
+fi
+
+if [ -z "$JWT_SECRET" ]; then
+  echo "Enter your JWT_SECRET key:"
+  read -r JWT_SECRET
+fi
+
+if [ -z "$NEXT_PUBLIC_APP_URL" ]; then
+  echo "Enter your NEXT_PUBLIC_APP_URL (e.g., http://localhost:3000):"
+  read -r NEXT_PUBLIC_APP_URL
+fi
+
+
 echo "🚀 Starting Coffee Shop automated setup..."
 
 # Step 1: Install dependencies
@@ -12,9 +29,9 @@ npm install
 # Step 2: Create environment file
 echo "⚙️  Creating environment configuration..."
 cat > .env.local << EOF
-DATABASE_URL=postgresql://admin:password@localhost:5432/coffee_shop
-JWT_SECRET=coffee-shop-secret-key-2024
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+DATABASE_URL=$DATABASE_URL
+JWT_SECRET=$JWT_SECRET
+NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 EOF
 
 # Step 3: Start database
