@@ -140,3 +140,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Patch applied in db.ts to restrict outbound connections to allowed hosts only
