@@ -19,20 +19,27 @@ export async function verifyPassword(
   return bcrypt.compare(password, hash);
 }
 
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("JWT_SECRET environment variable is not set. Token generation and verification require a secure secret.");
+  }
+  return secret;
+}
+
 export function generateToken(user: User): string {
+  const secret = getJwtSecret();
   return jwt.sign(
     { id: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET || "fallback-secret",
+    secret,
     { expiresIn: "24h" }
   );
 }
 
 export function verifyToken(token: string): User | null {
   try {
-    return jwt.verify(
-      token,
-      process.env.JWT_SECRET || "fallback-secret"
-    ) as User;
+    const secret = getJwtSecret();
+    return jwt.verify(token, secret) as User;
   } catch {
     return null;
   }
