@@ -20,18 +20,25 @@ export async function verifyPassword(
 }
 
 export function generateToken(user: User): string {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET environment variable is not set");
+  }
   return jwt.sign(
     { id: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET || "fallback-secret",
+    process.env.JWT_SECRET,
     { expiresIn: "24h" }
   );
 }
 
 export function verifyToken(token: string): User | null {
+  if (!process.env.JWT_SECRET) {
+    // If JWT_SECRET is not set, reject all tokens to avoid fallback secret vulnerability
+    return null;
+  }
   try {
     return jwt.verify(
       token,
-      process.env.JWT_SECRET || "fallback-secret"
+      process.env.JWT_SECRET
     ) as User;
   } catch {
     return null;
