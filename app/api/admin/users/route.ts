@@ -4,7 +4,11 @@ import { requireAdmin } from "@/lib/middleware";
 
 export async function GET(request: NextRequest) {
   try {
-    requireAdmin(request);
+    // Enforce admin privileges strictly
+    const user = requireAdmin(request);
+
+    // Additional logging for admin access
+    console.log(`Admin access granted to user: ${user.email}`);
 
     // Get all users with order count
     const result = await query(`
