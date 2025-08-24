@@ -18,8 +18,6 @@ interface Product {
 
 interface CartItem {
   product_id: number;
-  name: string;
-  price: number;
   quantity: number;
 }
 
@@ -29,10 +27,12 @@ export default function Home() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showLogin, setShowLogin] = useState(true);
   const [showAuthForm, setShowAuthForm] = useState(false);
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
       fetchProducts();
+      fetchCsrfToken();
       setShowAuthForm(false);
     }
   }, [user]);
@@ -44,6 +44,20 @@ export default function Home() {
       setProducts(data);
     } catch (error) {
       console.error("Failed to fetch products:", error);
+    }
+  };
+
+  const fetchCsrfToken = async () => {
+    try {
+      const response = await fetch("/api/csrf-token");
+      if (response.ok) {
+        const data = await response.json();
+        setCsrfToken(data.csrfToken);
+      } else {
+        console.error("Failed to fetch CSRF token");
+      }
+    } catch (error) {
+      console.error("Failed to fetch CSRF token:", error);
     }
   };
 
@@ -66,8 +80,6 @@ export default function Home() {
         ...cart,
         {
           product_id: productId,
-          name: product.name,
-          price: product.price,
           quantity: 1,
         },
       ]);
@@ -91,10 +103,18 @@ export default function Home() {
   };
 
   const checkout = async () => {
+    if (!csrfToken) {
+      alert("CSRF token missing. Please try again.");
+      return;
+    }
+
     try {
       const response = await fetch("/api/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-csrf-token": csrfToken,
+        },
         body: JSON.stringify({ items: cart }),
       });
 
@@ -127,7 +147,7 @@ export default function Home() {
           <div className="container mx-auto px-4 py-8">
             <div className="text-center mb-8">
               <h1 className="text-4xl font-bold text-gray-800 mb-2">
-                ☕ Coffee Shop
+                 Coffee Shop
               </h1>
               <p className="text-gray-600">Premium coffee and pastries</p>
             </div>
@@ -157,7 +177,7 @@ export default function Home() {
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-800 mb-2">
-              ☕ Coffee Shop
+               Coffee Shop
             </h1>
             <p className="text-gray-600 mb-8">Premium coffee and pastries</p>
 
@@ -177,7 +197,7 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">☕ Coffee Shop</h1>
+          <h1 className="text-2xl font-bold text-gray-800"> Coffee Shop</h1>
 
           <div className="flex items-center gap-4">
             <span className="text-gray-600">Welcome, {user.email}</span>
