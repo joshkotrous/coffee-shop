@@ -19,10 +19,16 @@ export async function verifyPassword(
   return bcrypt.compare(password, hash);
 }
 
+// Throw error if JWT_SECRET is not set to avoid fallback to insecure secret
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is not set.');
+}
+
 export function generateToken(user: User): string {
   return jwt.sign(
     { id: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET || "fallback-secret",
+    JWT_SECRET,
     { expiresIn: "24h" }
   );
 }
@@ -31,7 +37,7 @@ export function verifyToken(token: string): User | null {
   try {
     return jwt.verify(
       token,
-      process.env.JWT_SECRET || "fallback-secret"
+      JWT_SECRET
     ) as User;
   } catch {
     return null;
