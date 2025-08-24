@@ -6,7 +6,7 @@ echo "Setting up Coffee Shop Demo Application..."
 if [ ! -f .env.local ]; then
     echo "Creating .env.local file..."
     cat > .env.local << EOF
-DATABASE_URL=postgresql://admin:password@localhost:5432/coffee_shop
+DATABASE_URL=postgresql://<DB_USER>:<DB_PASSWORD>@localhost:5432/coffee_shop
 JWT_SECRET=coffee-shop-secret-key-2024
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 EOF
@@ -26,9 +26,8 @@ docker compose up -d
 echo "Waiting for database to initialize..."
 sleep 10
 
+# Removed printing default admin credentials to avoid exposing sensitive information
+
 echo "Setup complete! You can now run:"
 echo "  npm run dev"
 echo ""
-echo "Default admin credentials:"
-echo "  Email: admin@coffeeshop.com"
-echo "  Password: admin123"
