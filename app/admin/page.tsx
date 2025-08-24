@@ -41,6 +41,7 @@ export default function AdminPage() {
     image_url: "",
     stock_quantity: "",
   });
+  const [awaitingApproval, setAwaitingApproval] = useState(false);
 
   useEffect(() => {
     if (user && user.role === "admin") {
@@ -69,9 +70,24 @@ export default function AdminPage() {
     }
   };
 
+  // New function to simulate admin confirmation step
+  const confirmAddProduct = async () => {
+    // This could be replaced with a real multi-factor or manual confirmation step
+    return window.confirm("Are you sure you want to add this product? This action requires administrative confirmation.");
+  };
+
   const addProduct = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Require explicit confirmation before proceeding
+    const confirmed = await confirmAddProduct();
+    if (!confirmed) {
+      alert("Product addition cancelled.");
+      return;
+    }
+
     try {
+      setAwaitingApproval(true);
       const response = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -98,6 +114,8 @@ export default function AdminPage() {
     } catch (error) {
       console.error("Failed to add product:", error);
       alert("Failed to add product");
+    } finally {
+      setAwaitingApproval(false);
     }
   };
 
@@ -237,9 +255,10 @@ export default function AdminPage() {
                 <div className="mt-4 flex gap-2">
                   <button
                     type="submit"
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    disabled={awaitingApproval}
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
                   >
-                    Add Product
+                    {awaitingApproval ? "Awaiting Confirmation..." : "Add Product"}
                   </button>
                   <button
                     type="button"
