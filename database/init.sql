@@ -38,10 +38,6 @@ CREATE TABLE order_items (
     unit_price DECIMAL(10,2) NOT NULL
 );
 
--- Insert admin user (password: admin123)
-INSERT INTO users (email, password, role) VALUES 
-('admin@coffeeshop.com', '$2b$10$JFOxpAPWAXV1CgS/TmHzAOMcVCGopdJxSzOSTv023t.kTCcNj1OLi', 'admin');
-
 -- Insert sample products
 INSERT INTO products (name, description, price, image_url, stock_quantity) VALUES 
 ('Espresso', 'Rich and bold espresso shot', 2.50, '/images/espresso.jpg', 100),
