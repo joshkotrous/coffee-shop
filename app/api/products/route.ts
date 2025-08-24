@@ -26,10 +26,15 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    requireAdmin(request);
+    const user = requireAdmin(request);
 
     const { name, description, price, image_url, stock_quantity } =
       await request.json();
+
+    // Re-validate admin role immediately before critical operation
+    if (user.role !== "admin") {
+      throw new Error("Admin access required");
+    }
 
     const result = await query(
       "INSERT INTO products (name, description, price, image_url, stock_quantity) VALUES ($1, $2, $3, $4, $5) RETURNING *",
@@ -54,3 +59,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+
