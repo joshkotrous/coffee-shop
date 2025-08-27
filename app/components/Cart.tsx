@@ -71,9 +71,12 @@ export default function Cart({
 
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() =>
-                        onUpdateQuantity(item.product_id, item.quantity - 1)
-                      }
+                      onClick={() => {
+                        const newQuantity = item.quantity - 1;
+                        if (newQuantity >= 0) {
+                          onUpdateQuantity(item.product_id, newQuantity);
+                        }
+                      }}
                       className="w-8 h-8 bg-gray-200 rounded hover:bg-gray-300"
                     >
                       -
