@@ -90,12 +90,35 @@ export default function Home() {
     setCart(cart.filter((item) => item.product_id !== productId));
   };
 
+  // Validate cart items against current product data before checkout
+  const validateCart = (): CartItem[] => {
+    const validatedCart: CartItem[] = [];
+    for (const item of cart) {
+      const product = products.find((p) => p.id === item.product_id);
+      if (product && item.quantity > 0 && item.quantity <= product.stock_quantity) {
+        validatedCart.push({
+          product_id: product.id,
+          name: product.name,
+          price: product.price,
+          quantity: item.quantity,
+        });
+      }
+    }
+    return validatedCart;
+  };
+
   const checkout = async () => {
     try {
+      const validatedItems = validateCart();
+      if (validatedItems.length === 0) {
+        alert("Your cart is empty or contains invalid items.");
+        return;
+      }
+
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: cart }),
+        body: JSON.stringify({ items: validatedItems }),
       });
 
       if (response.ok) {
@@ -127,7 +150,7 @@ export default function Home() {
           <div className="container mx-auto px-4 py-8">
             <div className="text-center mb-8">
               <h1 className="text-4xl font-bold text-gray-800 mb-2">
-                ☕ Coffee Shop
+                375 Coffee Shop
               </h1>
               <p className="text-gray-600">Premium coffee and pastries</p>
             </div>
@@ -156,8 +179,8 @@ export default function Home() {
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">
-              ☕ Coffee Shop
+            <h1 className="text-4xl font-bold text-gray-800">
+              375 Coffee Shop
             </h1>
             <p className="text-gray-600 mb-8">Premium coffee and pastries</p>
 
@@ -177,7 +200,7 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">☕ Coffee Shop</h1>
+          <h1 className="text-2xl font-bold text-gray-800">375 Coffee Shop</h1>
 
           <div className="flex items-center gap-4">
             <span className="text-gray-600">Welcome, {user.email}</span>
