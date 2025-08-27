@@ -3,6 +3,18 @@
 # Coffee Shop Agent Setup Script
 # This script sets up the entire application in one go for automated deployment
 
+# Check if .env.local exists and contains a JWT_SECRET
+if [ -f .env.local ]; then
+  EXISTING_SECRET=$(grep '^JWT_SECRET=' .env.local | cut -d '=' -f2-)
+fi
+
+if [ -z "$EXISTING_SECRET" ]; then
+  echo "⚙️  Generating a strong random JWT secret..."
+  JWT_SECRET=$(openssl rand -hex 32)
+else
+  JWT_SECRET=$EXISTING_SECRET
+fi
+
 echo "🚀 Starting Coffee Shop automated setup..."
 
 # Step 1: Install dependencies
@@ -13,7 +25,7 @@ npm install
 echo "⚙️  Creating environment configuration..."
 cat > .env.local << EOF
 DATABASE_URL=postgresql://admin:password@localhost:5432/coffee_shop
-JWT_SECRET=coffee-shop-secret-key-2024
+JWT_SECRET=$JWT_SECRET
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 EOF
 
