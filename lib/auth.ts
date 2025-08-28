@@ -19,19 +19,26 @@ export async function verifyPassword(
   return bcrypt.compare(password, hash);
 }
 
+// Removed fallback secret to avoid hardcoded secret vulnerability
 export function generateToken(user: User): string {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET environment variable is not set");
+  }
   return jwt.sign(
     { id: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET || "fallback-secret",
+    process.env.JWT_SECRET,
     { expiresIn: "24h" }
   );
 }
 
 export function verifyToken(token: string): User | null {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET environment variable is not set");
+  }
   try {
     return jwt.verify(
       token,
-      process.env.JWT_SECRET || "fallback-secret"
+      process.env.JWT_SECRET
     ) as User;
   } catch {
     return null;
