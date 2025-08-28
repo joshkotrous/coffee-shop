@@ -8,6 +8,15 @@ export interface User {
   role: string;
 }
 
+// Retrieve the JWT secret from environment variable, throw error if not set
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("JWT_SECRET environment variable is not set. JWT signing is disabled.");
+  }
+  return secret;
+}
+
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10);
 }
@@ -20,19 +29,18 @@ export async function verifyPassword(
 }
 
 export function generateToken(user: User): string {
+  const secret = getJwtSecret();
   return jwt.sign(
     { id: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET || "fallback-secret",
+    secret,
     { expiresIn: "24h" }
   );
 }
 
 export function verifyToken(token: string): User | null {
   try {
-    return jwt.verify(
-      token,
-      process.env.JWT_SECRET || "fallback-secret"
-    ) as User;
+    const secret = getJwtSecret();
+    return jwt.verify(token, secret) as User;
   } catch {
     return null;
   }
