@@ -28,8 +28,16 @@ interface Order {
   }[];
 }
 
+interface ServerUser {
+  id: number;
+  email: string;
+  role: string;
+}
+
 export default function AdminPage() {
   const { user, loading } = useAuth();
+  const [serverUser, setServerUser] = useState<ServerUser | null>(null);
+  const [serverLoading, setServerLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState("products");
@@ -43,11 +51,33 @@ export default function AdminPage() {
   });
 
   useEffect(() => {
-    if (user && user.role === "admin") {
+    // Fetch server-validated user info
+    async function fetchServerUser() {
+      try {
+        const response = await fetch("/api/auth/me");
+        if (response.ok) {
+          const data = await response.json();
+          setServerUser(data.user);
+        } else {
+          setServerUser(null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch server user info:", error);
+        setServerUser(null);
+      } finally {
+        setServerLoading(false);
+      }
+    }
+
+    fetchServerUser();
+  }, []);
+
+  useEffect(() => {
+    if (serverUser && serverUser.role === "admin") {
       fetchProducts();
       fetchOrders();
     }
-  }, [user]);
+  }, [serverUser]);
 
   const fetchProducts = async () => {
     try {
@@ -101,7 +131,7 @@ export default function AdminPage() {
     }
   };
 
-  if (loading) {
+  if (loading || serverLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         Loading...
@@ -109,7 +139,7 @@ export default function AdminPage() {
     );
   }
 
-  if (!user) {
+  if (!serverUser) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -123,7 +153,7 @@ export default function AdminPage() {
     );
   }
 
-  if (user.role !== "admin") {
+  if (serverUser.role !== "admin") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -146,7 +176,7 @@ export default function AdminPage() {
             <Link href="/" className="text-blue-600 hover:underline">
               Back to Shop
             </Link>
-            <span className="text-gray-600">{user.email}</span>
+            <span className="text-gray-600">{serverUser.email}</span>
           </div>
         </div>
       </header>
