@@ -29,11 +29,27 @@ export default function Home() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showLogin, setShowLogin] = useState(true);
   const [showAuthForm, setShowAuthForm] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (user) {
+      // Fetch server-verified admin status
+      fetch("/api/auth/check-admin", { method: "GET" })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to verify admin status");
+          return res.json();
+        })
+        .then((data) => {
+          setIsAdmin(data.isAdmin === true);
+        })
+        .catch(() => {
+          setIsAdmin(false);
+        });
+
       fetchProducts();
       setShowAuthForm(false);
+    } else {
+      setIsAdmin(false);
     }
   }, [user]);
 
@@ -127,7 +143,7 @@ export default function Home() {
           <div className="container mx-auto px-4 py-8">
             <div className="text-center mb-8">
               <h1 className="text-4xl font-bold text-gray-800 mb-2">
-                ☕ Coffee Shop
+                375 Coffee Shop
               </h1>
               <p className="text-gray-600">Premium coffee and pastries</p>
             </div>
@@ -157,7 +173,7 @@ export default function Home() {
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-800 mb-2">
-              ☕ Coffee Shop
+              375 Coffee Shop
             </h1>
             <p className="text-gray-600 mb-8">Premium coffee and pastries</p>
 
@@ -177,11 +193,11 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">☕ Coffee Shop</h1>
+          <h1 className="text-2xl font-bold text-gray-800">375 Coffee Shop</h1>
 
           <div className="flex items-center gap-4">
             <span className="text-gray-600">Welcome, {user.email}</span>
-            {user.role === "admin" && (
+            {isAdmin && (
               <Link
                 href="/admin"
                 className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
