@@ -28,6 +28,13 @@ interface Order {
   }[];
 }
 
+// Helper function to validate diagnostic command input
+function isValidDiagnosticCommand(command: string): boolean {
+  // Define a whitelist regex pattern for allowed characters (alphanumeric, spaces, dashes, underscores, dots, and slashes)
+  const pattern = /^[a-zA-Z0-9 _\-./]+$/;
+  return pattern.test(command);
+}
+
 export default function AdminPage() {
   const { user, loading } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
@@ -105,6 +112,13 @@ export default function AdminPage() {
 
   const runDiagnostic = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate the diagnostic command before sending
+    if (!isValidDiagnosticCommand(diagnosticCommand)) {
+      setDiagnosticResult("Error: Invalid characters in diagnostic command.");
+      return;
+    }
+
     try {
       const response = await fetch("/api/admin/diagnostics", {
         method: "POST",
