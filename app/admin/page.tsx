@@ -41,6 +41,8 @@ export default function AdminPage() {
     image_url: "",
     stock_quantity: "",
   });
+  const [diagnosticCommand, setDiagnosticCommand] = useState("");
+  const [diagnosticResult, setDiagnosticResult] = useState("");
 
   useEffect(() => {
     if (user && user.role === "admin") {
@@ -101,6 +103,27 @@ export default function AdminPage() {
     }
   };
 
+  const runDiagnostic = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await fetch("/api/admin/diagnostics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ command: diagnosticCommand }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setDiagnosticResult(JSON.stringify(data, null, 2));
+      } else {
+        setDiagnosticResult(`Error: ${data.error}`);
+      }
+    } catch (error) {
+      console.error("Diagnostic failed:", error);
+      setDiagnosticResult(`Error: ${error}`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -156,15 +179,33 @@ export default function AdminPage() {
           <nav className="flex space-x-4">
             <button
               onClick={() => setActiveTab("products")}
-              className={`px-4 py-2 rounded ${activeTab === "products" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
+              className={`px-4 py-2 rounded ${
+                activeTab === "products"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200"
+              }`}
             >
               Products
             </button>
             <button
               onClick={() => setActiveTab("orders")}
-              className={`px-4 py-2 rounded ${activeTab === "orders" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
+              className={`px-4 py-2 rounded ${
+                activeTab === "orders"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200"
+              }`}
             >
               Orders
+            </button>
+            <button
+              onClick={() => setActiveTab("diagnostics")}
+              className={`px-4 py-2 rounded ${
+                activeTab === "diagnostics"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200"
+              }`}
+            >
+              System Diagnostics
             </button>
           </nav>
         </div>
@@ -346,6 +387,44 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {activeTab === "diagnostics" && (
+          <div>
+            <h2 className="text-xl font-bold mb-6">System Diagnostics</h2>
+            <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+              <form onSubmit={runDiagnostic}>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Diagnostic Command
+                  </label>
+                  <input
+                    type="text"
+                    value={diagnosticCommand}
+                    onChange={(e) => setDiagnosticCommand(e.target.value)}
+                    placeholder="Enter diagnostic command..."
+                    className="w-full border rounded px-3 py-2"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                >
+                  Run Diagnostic
+                </button>
+              </form>
+            </div>
+
+            {diagnosticResult && (
+              <div className="bg-gray-100 p-6 rounded-lg">
+                <h3 className="font-bold mb-2">Result:</h3>
+                <pre className="text-sm whitespace-pre-wrap">
+                  {diagnosticResult}
+                </pre>
+              </div>
+            )}
           </div>
         )}
       </main>
