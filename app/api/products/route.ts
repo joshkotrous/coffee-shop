@@ -2,11 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/middleware";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const result = await query(
-      "SELECT * FROM products ORDER BY created_at DESC"
-    );
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get("search");
+
+    let sqlQuery = "SELECT * FROM products";
+
+    if (search) {
+      sqlQuery += ` WHERE name ILIKE '%${search}%' OR description ILIKE '%${search}%'`;
+    }
+
+    sqlQuery += " ORDER BY created_at DESC";
+
+    const result = await query(sqlQuery);
 
     // Convert price strings to numbers
     const products = result.rows.map((product) => ({
