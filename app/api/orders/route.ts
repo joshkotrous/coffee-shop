@@ -68,67 +68,80 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No items in cart" }, { status: 400 });
     }
 
-    // Calculate total and create order
-    let totalAmount = 0;
-    const orderItems = [];
+    // Start transaction
+    await query("BEGIN");
 
-    for (const item of items) {
-      const productResult = await query(
-        "SELECT * FROM products WHERE id = $1",
-        [item.product_id]
+    try {
+      // Calculate total and create order
+      let totalAmount = 0;
+      const orderItems = [];
+
+      for (const item of items) {
+        // Lock the product row for update to prevent race conditions
+        const productResult = await query(
+          "SELECT * FROM products WHERE id = $1 FOR UPDATE",
+          [item.product_id]
+        );
+        const product = productResult.rows[0];
+
+        if (!product) {
+          await query("ROLLBACK");
+          return NextResponse.json(
+            { error: `Product ${item.product_id} not found` },
+            { status: 400 }
+          );
+        }
+
+        if (product.stock_quantity < item.quantity) {
+          await query("ROLLBACK");
+          return NextResponse.json(
+            { error: `Insufficient stock for ${product.name}` },
+            { status: 400 }
+          );
+        }
+
+        const itemTotal = product.price * item.quantity;
+        totalAmount += itemTotal;
+
+        orderItems.push({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          unit_price: product.price,
+        });
+      }
+
+      // Create order
+      const orderResult = await query(
+        "INSERT INTO orders (user_id, total_amount) VALUES ($1, $2) RETURNING *",
+        [user.id, totalAmount]
       );
-      const product = productResult.rows[0];
 
-      if (!product) {
-        return NextResponse.json(
-          { error: `Product ${item.product_id} not found` },
-          { status: 400 }
+      const order = orderResult.rows[0];
+
+      // Add order items and update stock
+      for (const item of orderItems) {
+        await query(
+          "INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES ($1, $2, $3, $4)",
+          [order.id, item.product_id, item.quantity, item.unit_price]
+        );
+
+        await query(
+          "UPDATE products SET stock_quantity = stock_quantity - $1 WHERE id = $2",
+          [item.quantity, item.product_id]
         );
       }
 
-      if (product.stock_quantity < item.quantity) {
-        return NextResponse.json(
-          { error: `Insufficient stock for ${product.name}` },
-          { status: 400 }
-        );
-      }
+      // Commit transaction
+      await query("COMMIT");
 
-      const itemTotal = product.price * item.quantity;
-      totalAmount += itemTotal;
-
-      orderItems.push({
-        product_id: item.product_id,
-        quantity: item.quantity,
-        unit_price: product.price,
+      return NextResponse.json({
+        message: "Order created successfully",
+        order_id: order.id,
       });
+    } catch (error) {
+      await query("ROLLBACK");
+      throw error;
     }
-
-    // Create order
-    const orderResult = await query(
-      "INSERT INTO orders (user_id, total_amount) VALUES ($1, $2) RETURNING *",
-      [user.id, totalAmount]
-    );
-
-    const order = orderResult.rows[0];
-
-    // Add order items
-    for (const item of orderItems) {
-      await query(
-        "INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES ($1, $2, $3, $4)",
-        [order.id, item.product_id, item.quantity, item.unit_price]
-      );
-
-      // Update stock
-      await query(
-        "UPDATE products SET stock_quantity = stock_quantity - $1 WHERE id = $2",
-        [item.quantity, item.product_id]
-      );
-    }
-
-    return NextResponse.json({
-      message: "Order created successfully",
-      order_id: order.id,
-    });
   } catch (error) {
     if (error instanceof Error && error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
