@@ -41,11 +41,38 @@ export default function AdminPage() {
     image_url: "",
     stock_quantity: "",
   });
+  const [isAdminVerified, setIsAdminVerified] = useState(false);
 
   useEffect(() => {
-    if (user && user.role === "admin") {
-      fetchProducts();
-      fetchOrders();
+    // Verify admin status on server before fetching data
+    const verifyAdmin = async () => {
+      try {
+        const response = await fetch("/api/admin/verify-admin");
+        if (response.ok) {
+          const data = await response.json();
+          setIsAdminVerified(data.isAdmin === true);
+          if (data.isAdmin === true) {
+            fetchProducts();
+            fetchOrders();
+          } else {
+            setProducts([]);
+            setOrders([]);
+          }
+        } else {
+          setIsAdminVerified(false);
+          setProducts([]);
+          setOrders([]);
+        }
+      } catch (error) {
+        console.error("Failed to verify admin status:", error);
+        setIsAdminVerified(false);
+        setProducts([]);
+        setOrders([]);
+      }
+    };
+
+    if (user) {
+      verifyAdmin();
     }
   }, [user]);
 
@@ -123,7 +150,7 @@ export default function AdminPage() {
     );
   }
 
-  if (user.role !== "admin") {
+  if (!isAdminVerified) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
