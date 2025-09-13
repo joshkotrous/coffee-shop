@@ -8,14 +8,16 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search");
 
     let sqlQuery = "SELECT * FROM products";
+    let queryParams = [];
 
     if (search) {
-      sqlQuery += ` WHERE name ILIKE '%${search}%' OR description ILIKE '%${search}%'`;
+      sqlQuery += " WHERE name ILIKE $1 OR description ILIKE $1";
+      queryParams.push(`%${search}%`);
     }
 
     sqlQuery += " ORDER BY created_at DESC";
 
-    const result = await query(sqlQuery);
+    const result = await query(sqlQuery, queryParams);
 
     // Convert price strings to numbers
     const products = result.rows.map((product) => ({
