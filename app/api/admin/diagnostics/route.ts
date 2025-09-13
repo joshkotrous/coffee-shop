@@ -14,11 +14,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = eval(command);
-
+    // Remove unsafe eval usage
+    // Instead of eval, return an error indicating unsupported operation
     return NextResponse.json({
-      command: command,
-      result: result,
+      error: "Execution of arbitrary commands is disabled for security reasons",
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
