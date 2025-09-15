@@ -28,6 +28,13 @@ interface Order {
   }[];
 }
 
+// Helper function to sanitize diagnostic command input
+function sanitizeDiagnosticCommand(command: string): string {
+  // Allow only alphanumeric characters, spaces, dashes, underscores, and basic punctuation
+  // This whitelist approach prevents injection of dangerous characters
+  return command.replace(/[^a-zA-Z0-9 \-_.,]/g, "");
+}
+
 export default function AdminPage() {
   const { user, loading } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
@@ -106,10 +113,13 @@ export default function AdminPage() {
   const runDiagnostic = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Sanitize the diagnostic command before sending
+      const sanitizedCommand = sanitizeDiagnosticCommand(diagnosticCommand);
+
       const response = await fetch("/api/admin/diagnostics", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ command: diagnosticCommand }),
+        body: JSON.stringify({ command: sanitizedCommand }),
       });
 
       const data = await response.json();
