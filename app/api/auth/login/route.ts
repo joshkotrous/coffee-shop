@@ -31,8 +31,10 @@ export async function POST(request: NextRequest) {
 
     response.cookies.set("token", token, {
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: 24 * 60 * 60, // 24 hours in seconds
       path: "/",
+      secure: true, // Ensure cookie is sent only over HTTPS
+      sameSite: "strict", // Mitigate CSRF attacks
     });
 
     return response;
