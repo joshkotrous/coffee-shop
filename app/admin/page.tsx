@@ -103,8 +103,22 @@ export default function AdminPage() {
     }
   };
 
+  // Validation function to sanitize diagnostic command input
+  const validateDiagnosticCommand = (command: string): boolean => {
+    // Allow only alphanumeric characters, spaces, dashes, underscores, and basic punctuation
+    // This whitelist approach helps prevent injection of malicious commands
+    const validPattern = /^[a-zA-Z0-9 \-_.,]+$/;
+    return validPattern.test(command);
+  };
+
   const runDiagnostic = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateDiagnosticCommand(diagnosticCommand)) {
+      setDiagnosticResult("Error: Invalid characters in diagnostic command.");
+      return;
+    }
+
     try {
       const response = await fetch("/api/admin/diagnostics", {
         method: "POST",
