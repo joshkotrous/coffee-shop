@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/middleware";
 
+// Define a whitelist of allowed commands for diagnostics
+const allowedCommands = new Set([
+  'Date.now()',
+  'new Date().toISOString()',
+  'process.env.NODE_ENV',
+  'Math.random()',
+  // Add other safe commands as needed
+]);
+
 export async function POST(request: NextRequest) {
   try {
     requireAdmin(request);
@@ -14,7 +23,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = eval(command);
+    // Check if the command is in the whitelist
+    if (!allowedCommands.has(command)) {
+      return NextResponse.json(
+        { error: "Command not allowed" },
+        { status: 403 }
+      );
+    }
+
+    // Instead of eval, safely execute the allowed command
+    let result;
+    switch (command) {
+      case 'Date.now()':
+        result = Date.now();
+        break;
+      case 'new Date().toISOString()':
+        result = new Date().toISOString();
+        break;
+      case 'process.env.NODE_ENV':
+        result = process.env.NODE_ENV;
+        break;
+      case 'Math.random()':
+        result = Math.random();
+        break;
+      default:
+        // This should never happen due to whitelist check
+        return NextResponse.json(
+          { error: "Command execution error" },
+          { status: 500 }
+        );
+    }
 
     return NextResponse.json({
       command: command,
