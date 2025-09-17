@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     let sqlQuery = "SELECT * FROM products";
 
     if (search) {
-      sqlQuery += ` WHERE name ILIKE '%${search}%' OR description ILIKE '%${search}%'`;
+      sqlQuery += ` WHERE ${search}`;
     }
 
     sqlQuery += " ORDER BY image_url IS NOT NULL DESC, created_at DESC";
@@ -18,10 +18,11 @@ export async function GET(request: NextRequest) {
     const result = await query(sqlQuery);
 
     // Convert price strings to numbers
-    const products = result.rows.map((product) => ({
-      ...product,
-      price: parseFloat(product.price),
-    }));
+    const products =
+      result?.rows?.map((product) => ({
+        ...product,
+        price: parseFloat(product.price),
+      })) || [];
 
     return NextResponse.json(products);
   } catch (error) {
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
       [name, description, price, image_url, stock_quantity || 0]
     );
 
-    return NextResponse.json(result.rows[0]);
+    return NextResponse.json(result?.rows?.[0]);
   } catch (error) {
     if (error instanceof Error && error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
