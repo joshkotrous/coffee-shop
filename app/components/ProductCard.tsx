@@ -18,10 +18,21 @@ export default function ProductCard({
   product,
   onAddToCart,
 }: ProductCardProps) {
+  // Use default coffee image if no image_url is provided
+  const imageUrl = product.image_url || "/coffee-default.webp";
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <div className="h-48 bg-gray-200 flex items-center justify-center">
-        <span className="text-gray-500">☕</span>
+      <div className="h-48 bg-gray-200 flex items-center justify-center overflow-hidden">
+        <img
+          src={imageUrl}
+          alt={product.name}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            // Fallback to default image if the provided image fails to load
+            e.currentTarget.src = "/coffee-default.webp";
+          }}
+        />
       </div>
 
       <div className="p-4">

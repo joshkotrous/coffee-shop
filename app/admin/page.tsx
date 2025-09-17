@@ -263,6 +263,18 @@ export default function AdminPage() {
                     className="border rounded px-3 py-2"
                   />
                   <input
+                    type="text"
+                    placeholder="Image URL (optional)"
+                    value={newProduct.image_url}
+                    onChange={(e) =>
+                      setNewProduct({
+                        ...newProduct,
+                        image_url: e.target.value,
+                      })
+                    }
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
                     type="number"
                     placeholder="Stock Quantity"
                     value={newProduct.stock_quantity}
@@ -298,6 +310,9 @@ export default function AdminPage() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Image
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Name
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -314,6 +329,18 @@ export default function AdminPage() {
                 <tbody className="divide-y divide-gray-200">
                   {products.map((product) => (
                     <tr key={product.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="w-16 h-16 bg-gray-200 rounded overflow-hidden">
+                          <img
+                            src={product.image_url || "/coffee-default.webp"}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = "/coffee-default.webp";
+                            }}
+                          />
+                        </div>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">

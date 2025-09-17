@@ -44,11 +44,11 @@ INSERT INTO users (email, password, role) VALUES
 
 -- Insert sample products
 INSERT INTO products (name, description, price, image_url, stock_quantity) VALUES 
-('Espresso', 'Rich and bold espresso shot', 2.50, '/images/espresso.jpg', 100),
-('Cappuccino', 'Espresso with steamed milk and foam', 4.25, '/images/cappuccino.jpg', 50),
-('Latte', 'Smooth espresso with steamed milk', 4.75, '/images/latte.jpg', 75),
-('Americano', 'Espresso with hot water', 3.50, '/images/americano.jpg', 60),
-('Mocha', 'Espresso with chocolate and steamed milk', 5.25, '/images/mocha.jpg', 40),
-('Cold Brew', 'Smooth cold-brewed coffee', 3.75, '/images/coldbrew.jpg', 30),
-('Croissant', 'Buttery French pastry', 3.00, '/images/croissant.jpg', 25),
-('Blueberry Muffin', 'Fresh blueberry muffin', 2.75, '/images/muffin.jpg', 20);
+('Espresso', 'Rich and bold espresso shot', 2.50, NULL, 100),
+('Cappuccino', 'Espresso with steamed milk and foam', 4.25, NULL, 50),
+('Latte', 'Smooth espresso with steamed milk', 4.75, NULL, 75),
+('Americano', 'Espresso with hot water', 3.50, NULL, 60),
+('Mocha', 'Espresso with chocolate and steamed milk', 5.25, NULL, 40),
+('Cold Brew', 'Smooth cold-brewed coffee', 3.75, NULL, 30),
+('Croissant', 'Buttery French pastry', 3.00, NULL, 25),
+('Blueberry Muffin', 'Fresh blueberry muffin', 2.75, NULL, 20);
