@@ -14,13 +14,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = eval(command);
-
-    return NextResponse.json({
-      command: command,
-      result: result,
-      timestamp: new Date().toISOString(),
-    });
+    // Remove use of eval to prevent arbitrary code execution
+    // Instead, return an error indicating that this operation is not supported
+    return NextResponse.json(
+      { error: "Execution of arbitrary commands is disabled for security reasons" },
+      { status: 403 }
+    );
   } catch (error) {
     if (error instanceof Error && error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
