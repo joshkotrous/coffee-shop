@@ -38,6 +38,17 @@ CREATE TABLE order_items (
     unit_price DECIMAL(10,2) NOT NULL
 );
 
+-- Token blacklist table for invalidated tokens
+CREATE TABLE token_blacklist (
+    id SERIAL PRIMARY KEY,
+    token_signature VARCHAR(255) UNIQUE NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create index on expires_at for efficient cleanup
+CREATE INDEX idx_token_blacklist_expires_at ON token_blacklist(expires_at);
+
 -- Insert admin user (password: admin123)
 INSERT INTO users (email, password, role) VALUES 
 ('admin@coffeeshop.com', '$2b$10$JFOxpAPWAXV1CgS/TmHzAOMcVCGopdJxSzOSTv023t.kTCcNj1OLi', 'admin');
