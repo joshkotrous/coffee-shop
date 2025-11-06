@@ -34,3 +34,39 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+import { NextRequest, NextResponse } from 'next/server';
+import pool from '@/lib/db';
+
+export async function GET(request: NextRequest) {
+  try {
+    // Fetch user data - select only non-sensitive fields
+    const result = await pool.query(
+      'SELECT id, email, role, created_at FROM users ORDER BY id'
+    );
+
+    const response = NextResponse.json(result.rows);
+
+    // Add security headers to prevent MIME type sniffing
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+
+    // Prevent the API response from being embedded in iframes
+    response.headers.set('X-Frame-Options', 'DENY');
+
+    // Prevent browsers and proxies from caching sensitive user data
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private, max-age=0');
+
+    // Enforce HTTPS for all future requests
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+
+    // Restrict script execution to same-origin only
+    response.headers.set('Content-Security-Policy', "default-src 'self'");
+
+    return response;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch users' },
+      { status: 500 }
+    );
+  }
+}
