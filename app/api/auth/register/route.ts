@@ -14,9 +14,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists
-    const existingUser = await query("SELECT id FROM users WHERE email = $1", [
-      email,
+    // Normalize email: lowercase and trim whitespace
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check if user already exists (using normalized email)
+    const existingUser = await query("SELECT id FROM users WHERE LOWER(TRIM(email)) = $1", [
+      normalizedEmail,
     ]);
     if (existingUser.rows.length > 0) {
       return NextResponse.json(
@@ -25,11 +28,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hash password and create user
+    // Hash password and create user (store normalized email)
     const hashedPassword = await hashPassword(password);
     const result = await query(
       "INSERT INTO users (email, password, role) VALUES ($1, $2, $3) RETURNING id, email, role",
-      [email, hashedPassword, "user"]
+      [normalizedEmail, hashedPassword, "user"]
     );
 
     const user = result.rows[0];
