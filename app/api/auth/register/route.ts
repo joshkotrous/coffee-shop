@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hashPassword, generateToken } from "@/lib/auth";
-import { query } from "@/lib/db";
+import pool from '@/lib/db';
+import * as bcrypt from 'bcrypt';
+
+// Strict email validation regex - RFC 5322 compliant with security restrictions
+// Only allows alphanumeric, dots, hyphens, underscores, and @ symbol
+// Explicitly rejects HTML special characters
+const EMAIL_REGEX = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const INVALID_CHARS_REGEX = /[<>'"`;\/\\]/;
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const body = await request.json();
 
     // Basic validation
     if (!email || !password) {
@@ -14,11 +20,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate email format and reject emails with dangerous characters
+    const trimmedEmail = email.trim();
+    
+    if (!EMAIL_REGEX.test(trimmedEmail)) {
+      return NextResponse.json(
+        { error: 'Invalid email format' },
+        { status: 400 }
+      );
+    }
+
+    if (INVALID_CHARS_REGEX.test(trimmedEmail)) {
+      return NextResponse.json(
+        { error: 'Invalid email format' },
+        { status: 400 }
+      );
+    }
+
     // Check if user already exists
-    const existingUser = await query("SELECT id FROM users WHERE email = $1", [
-      email,
-    ]);
-    if (existingUser.rows.length > 0) {
+    const checkResult = await pool.query('SELECT * FROM users WHERE email = $1', [trimmedEmail]);
+    if (checkResult.rows.length > 0) {
+      return NextResponse.json(
+        { error: 'User already exists' },
       return NextResponse.json(
         { error: "User already exists" },
         { status: 409 }
@@ -26,10 +49,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Hash password and create user
-    const hashedPassword = await hashPassword(password);
-    const result = await query(
-      "INSERT INTO users (email, password, role) VALUES ($1, $2, $3) RETURNING id, email, role",
-      [email, hashedPassword, "user"]
+    // Create user
+    const result = await pool.query(
+      'INSERT INTO users (email, password_hash, role) VALUES ($1, $2, $3) RETURNING id, email, role',
+      [trimmedEmail, passwordHash, 'user']
     );
 
     const user = result.rows[0];
