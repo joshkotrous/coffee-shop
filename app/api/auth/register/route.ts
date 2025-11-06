@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hashPassword, generateToken } from "@/lib/auth";
+import { hashPassword } from "@/lib/auth";
 import { query } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
@@ -14,44 +14,59 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: "Invalid email format" },
+        { status: 400 }
+      );
+    }
+
+    // Validate password strength (at least 8 characters)
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: "Password must be at least 8 characters long" },
+        { status: 400 }
+      );
+    }
+
     // Check if user already exists
     const existingUser = await query("SELECT id FROM users WHERE email = $1", [
       email,
     ]);
     if (existingUser.rows.length > 0) {
+      // Return the same generic response to prevent user enumeration
       return NextResponse.json(
-        { error: "User already exists" },
-        { status: 409 }
+        {
+          message:
+            "If this email is registered, you will receive a confirmation link. Please check your inbox.",
+        },
+        { status: 200 }
       );
     }
 
     // Hash password and create user
     const hashedPassword = await hashPassword(password);
-    const result = await query(
-      "INSERT INTO users (email, password, role) VALUES ($1, $2, $3) RETURNING id, email, role",
+    await query(
+      "INSERT INTO users (email, password, role) VALUES ($1, $2, $3)",
       [email, hashedPassword, "user"]
     );
 
-    const user = result.rows[0];
-    const token = generateToken(user);
-
-    const response = NextResponse.json({
-      message: "Registration successful",
-      user: { id: user.id, email: user.email, role: user.role },
-    });
-
-    response.cookies.set("token", token, {
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      path: "/",
-    });
-
-    return response;
+    // Return generic success message without user details
+    return NextResponse.json(
+      {
+        message:
+          "If this email is registered, you will receive a confirmation link. Please check your inbox.",
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Registration error:", error);
+    // Return generic error message to avoid leaking information
     return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+      { error: "An error occurred during registration. Please try again later." },
+      { status: 400 }
     );
   }
 }
