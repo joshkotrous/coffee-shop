@@ -6,6 +6,8 @@ CREATE TABLE users (
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(50) DEFAULT 'user',
+    failed_attempts INTEGER DEFAULT 0,
+    locked_until TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -37,6 +39,20 @@ CREATE TABLE order_items (
     quantity INTEGER NOT NULL,
     unit_price DECIMAL(10,2) NOT NULL
 );
+
+-- Login attempts table for audit logging
+CREATE TABLE login_attempts (
+    id SERIAL PRIMARY KEY,
+    ip_address VARCHAR(45),
+    email VARCHAR(255),
+    success BOOLEAN,
+    attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create index for login attempts queries
+CREATE INDEX idx_login_attempts_email ON login_attempts(email);
+CREATE INDEX idx_login_attempts_ip ON login_attempts(ip_address);
+CREATE INDEX idx_login_attempts_time ON login_attempts(attempted_at);
 
 -- Insert admin user (password: admin123)
 INSERT INTO users (email, password, role) VALUES 
