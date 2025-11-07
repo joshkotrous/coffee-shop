@@ -3,24 +3,26 @@ import { requireAdmin } from "@/lib/middleware";
 
 export async function POST(request: NextRequest) {
   try {
+    // Require admin access
     requireAdmin(request);
 
-    const { command } = await request.json();
-
-    if (!command) {
-      return NextResponse.json(
-        { error: "Command parameter required" },
-        { status: 400 }
-      );
-    }
-
-    const result = eval(command);
-
-    return NextResponse.json({
-      command: command,
-      result: result,
-      timestamp: new Date().toISOString(),
-    });
+    // The diagnostics endpoint has been disabled for security reasons.
+    // The use of eval() to execute arbitrary JavaScript code presents a
+    // critical Remote Code Execution (RCE) vulnerability that cannot be safely mitigated.
+    // Even when restricted to admin users only, allowing code execution through eval()
+    // exposes the application to catastrophic security risks including:
+    // - Server compromise and takeover
+    // - Data theft and exfiltration
+    // - Application shutdown and denial of service
+    // - Privilege escalation attacks
+    //
+    // This endpoint has been completely disabled. For legitimate diagnostics needs,
+    // please implement a safe alternative that does not use eval() and only exposes
+    // pre-defined, safe diagnostic operations.
+    return NextResponse.json(
+      { error: "Diagnostics endpoint has been disabled for security reasons" },
+      { status: 403 }
+    );
   } catch (error) {
     if (error instanceof Error && error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
