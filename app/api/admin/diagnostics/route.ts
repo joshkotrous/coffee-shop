@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/middleware";
 
+// Allowlist of safe diagnostic commands
+const ALLOWED_COMMANDS = ["health", "version", "status"];
+
 export async function POST(request: NextRequest) {
   try {
     requireAdmin(request);
@@ -14,7 +17,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = eval(command);
+    // Input validation: ensure command is a string
+    if (typeof command !== "string") {
+      return NextResponse.json(
+        { error: "Command must be a string" },
+        { status: 400 }
+      );
+    }
+
+    // Whitelist validation: only allow specific commands
+    if (!ALLOWED_COMMANDS.includes(command.toLowerCase())) {
+      return NextResponse.json(
+        { error: "Invalid command" },
+        { status: 400 }
+      );
+    }
+
+    let result: string;
+
+    // Command dispatch: handle only safe operations
+    switch (command.toLowerCase()) {
+      case "health":
+        result = "ok";
+        break;
+      case "version":
+        result = "1.0.0";
+        break;
+      case "status":
+        result = "running";
+        break;
+      default:
+        return NextResponse.json(
+          { error: "Invalid command" },
+          { status: 400 }
+        );
+    }
 
     return NextResponse.json({
       command: command,
