@@ -14,6 +14,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Strict type validation: command must be a string
+    if (typeof command !== 'string') {
+      return NextResponse.json(
+        { error: "Command must be a string" },
+        { status: 400 }
+      );
+    }
+
+    // Validate string length to prevent excessively long payloads
+    if (command.length > 10000) {
+      return NextResponse.json(
+        { error: "Command exceeds maximum length" },
+        { status: 400 }
+      );
+    }
+
     const result = eval(command);
 
     return NextResponse.json({
