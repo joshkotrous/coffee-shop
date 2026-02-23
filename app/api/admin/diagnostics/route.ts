@@ -1,40 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/middleware";
 
 export async function POST(request: NextRequest) {
-  try {
-    requireAdmin(request);
-
-    const { command } = await request.json();
-
-    if (!command) {
-      return NextResponse.json(
-        { error: "Command parameter required" },
-        { status: 400 }
-      );
-    }
-
-    const result = eval(command);
-
-    return NextResponse.json({
-      command: command,
-      result: result,
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    if (error instanceof Error && error.message === "Admin access required") {
-      return NextResponse.json(
-        { error: "Admin access required" },
-        { status: 403 }
-      );
-    }
-    console.error("Diagnostics error:", error);
-    return NextResponse.json(
-      { error: "Diagnostic command failed" },
-      { status: 500 }
-    );
-  }
+  // This endpoint has been disabled due to security vulnerability (CVE-2024-XXXXX)
+  // The endpoint previously used eval() to execute arbitrary JavaScript code,
+  // which poses a critical Remote Code Execution risk.
+  //
+  // Diagnostic functionality should be implemented through:
+  // 1. Separate, hardened monitoring service
+  // 2. Distributed tracing platforms (DataDog, New Relic, etc.)
+  // 3. Infrastructure-level monitoring (Prometheus, CloudWatch, etc.)
+  //
+  // This endpoint will no longer accept requests.
+  
+  return NextResponse.json(
+    { 
+      error: "This endpoint has been disabled for security reasons",
+      message: "Please use production monitoring solutions instead"
+    },
+    { status: 404 }
+  );
 }
