@@ -1,21 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
-import { requireAdmin } from "@/lib/middleware";
+import { requireAdmin, requireAuth } from "@/lib/middleware";
 
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication for accessing products
+    requireAuth(request);
+
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search");
 
     let sqlQuery = "SELECT * FROM products";
+    const params: unknown[] = [];
 
     if (search) {
-      sqlQuery += ` WHERE ${search}`;
+      // Use parameterized query to prevent SQL injection
+      sqlQuery += " WHERE name ILIKE $1 OR description ILIKE $1";
+      params.push(`%${search}%`);
     }
 
     sqlQuery += " ORDER BY image_url IS NOT NULL DESC, created_at DESC";
 
-    const result = await query(sqlQuery);
+    const result = await query(sqlQuery, params);
 
     // Convert price strings to numbers
     const products =
@@ -26,6 +32,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(products);
   } catch (error) {
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     console.error("Error fetching products:", error);
     return NextResponse.json(
       { error: "Failed to fetch products" },
