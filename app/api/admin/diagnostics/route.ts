@@ -1,6 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/middleware";
 
+// Whitelist of allowed diagnostic commands
+const ALLOWED_COMMANDS = ["health-check", "version", "memory-stats"];
+
+// Safe diagnostic command handlers
+const diagnosticHandlers: Record<string, () => any> = {
+  "health-check": () => {
+    return {
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+    };
+  },
+  "version": () => {
+    return {
+      nodeVersion: process.version,
+      platform: process.platform,
+    };
+  },
+  "memory-stats": () => {
+    const mem = process.memoryUsage();
+    return {
+      heapUsed: Math.round(mem.heapUsed / 1024 / 1024) + " MB",
+      heapTotal: Math.round(mem.heapTotal / 1024 / 1024) + " MB",
+      rss: Math.round(mem.rss / 1024 / 1024) + " MB",
+    };
+  },
+};
+
 export async function POST(request: NextRequest) {
   try {
     requireAdmin(request);
@@ -14,7 +42,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = eval(command);
+    // Validate that the command is in the whitelist
+    if (!ALLOWED_COMMANDS.includes(command)) {
+      return NextResponse.json(
+        {
+          error: "Unknown command",
+          allowedCommands: ALLOWED_COMMANDS,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Execute the whitelisted command safely
+    const handler = diagnosticHandlers[command];
+    const result = handler();
 
     return NextResponse.json({
       command: command,
