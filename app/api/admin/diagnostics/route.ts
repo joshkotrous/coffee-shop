@@ -14,13 +14,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = eval(command);
-
-    return NextResponse.json({
-      command: command,
-      result: result,
-      timestamp: new Date().toISOString(),
-    });
+    // SECURITY FIX: Removed dangerous eval() function
+    // eval() allows arbitrary code execution which is a critical security vulnerability
+    // Instead, return a safe diagnostic response that doesn't expose sensitive information
+    // or allow arbitrary code execution
+    
+    return NextResponse.json(
+      { 
+        error: "Arbitrary command execution is not supported. Use specific diagnostic endpoints instead.",
+        availableCommands: [
+          "GET /api/admin/health - Server health status",
+          "GET /api/admin/version - Application version",
+          "GET /api/admin/system - Safe system diagnostics"
+        ]
+      },
+      { status: 400 }
+    );
   } catch (error) {
     if (error instanceof Error && error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
