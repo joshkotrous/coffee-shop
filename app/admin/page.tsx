@@ -41,7 +41,7 @@ export default function AdminPage() {
     image_url: "",
     stock_quantity: "",
   });
-  const [diagnosticCommand, setDiagnosticCommand] = useState("");
+  const [diagnosticCommand, setDiagnosticCommand] = useState("health");
   const [diagnosticResult, setDiagnosticResult] = useState("");
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [editProduct, setEditProduct] = useState({
@@ -623,14 +623,17 @@ export default function AdminPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Diagnostic Command
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={diagnosticCommand}
                     onChange={(e) => setDiagnosticCommand(e.target.value)}
-                    placeholder="Enter diagnostic command..."
                     className="w-full border rounded px-3 py-2"
                     required
-                  />
+                  >
+                    <option value="health">Health Check</option>
+                    <option value="uptime">Uptime</option>
+                    <option value="memory">Memory Usage</option>
+                    <option value="env">Environment Info</option>
+                  </select>
                 </div>
                 <button
                   type="submit"
