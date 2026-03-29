@@ -3,11 +3,14 @@
 -- Users table
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(50) DEFAULT 'user',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create a unique index on LOWER(email) to enforce case-insensitive uniqueness
+CREATE UNIQUE INDEX idx_users_email_lower ON users (LOWER(email));
 
 -- Products table
 CREATE TABLE products (

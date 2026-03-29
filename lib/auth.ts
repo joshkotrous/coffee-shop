@@ -39,9 +39,12 @@ export function verifyToken(token: string): User | null {
 }
 
 export async function getUserByEmail(email: string): Promise<User | null> {
+  // Normalize email: lowercase and trim whitespace
+  const normalizedEmail = email.toLowerCase().trim();
+  
   const result = await query(
-    "SELECT id, email, role FROM users WHERE email = $1",
-    [email]
+    "SELECT id, email, role FROM users WHERE LOWER(TRIM(email)) = $1",
+    [normalizedEmail]
   );
   return result.rows[0] || null;
 }
@@ -50,7 +53,10 @@ export async function authenticateUser(
   email: string,
   password: string
 ): Promise<User | null> {
-  const result = await query("SELECT * FROM users WHERE email = $1", [email]);
+  // Normalize email: lowercase and trim whitespace
+  const normalizedEmail = email.toLowerCase().trim();
+  
+  const result = await query("SELECT * FROM users WHERE LOWER(TRIM(email)) = $1", [normalizedEmail]);
   const user = result.rows[0];
 
   if (!user) return null;
