@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hashPassword, generateToken } from "@/lib/auth";
+import { hashPassword, generateToken, validatePassword } from "@/lib/auth";
 import { query } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
@@ -10,6 +10,15 @@ export async function POST(request: NextRequest) {
     if (!email || !password) {
       return NextResponse.json(
         { error: "Email and password required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate password strength
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      return NextResponse.json(
+        { error: passwordValidation.error },
         { status: 400 }
       );
     }
