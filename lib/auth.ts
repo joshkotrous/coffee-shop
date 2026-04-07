@@ -8,6 +8,20 @@ export interface User {
   role: string;
 }
 
+export class TokenExpiredError extends Error {
+  constructor() {
+    super("Token has expired");
+    this.name = "TokenExpiredError";
+  }
+}
+
+export class InvalidTokenError extends Error {
+  constructor() {
+    super("Token is invalid or malformed");
+    this.name = "InvalidTokenError";
+  }
+}
+
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10);
 }
@@ -33,7 +47,14 @@ export function verifyToken(token: string): User | null {
       token,
       process.env.JWT_SECRET || "fallback-secret"
     ) as User;
-  } catch {
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      console.warn("Token expired:", error.message);
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      console.warn("Invalid token:", error.message);
+    } else {
+      console.warn("Token verification failed:", error);
+    }
     return null;
   }
 }

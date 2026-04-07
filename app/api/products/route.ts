@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
-import { requireAdmin } from "@/lib/middleware";
+import {
+  requireAdmin,
+  AuthenticationError,
+  AuthorizationError,
+  MalformedAuthHeaderError,
+} from "@/lib/middleware";
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,15 +53,33 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result?.rows?.[0]);
   } catch (error) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    if (error instanceof Error && error.message === "Admin access required") {
+    // Handle malformed auth headers (400 Bad Request)
+    if (error instanceof MalformedAuthHeaderError) {
+      console.warn("Malformed Authorization header:", error.message);
       return NextResponse.json(
-        { error: "Admin access required" },
+        { error: "Bad Request: Invalid Authorization header" },
+        { status: 400 }
+      );
+    }
+
+    // Handle authentication errors (401)
+    if (error instanceof AuthenticationError) {
+      console.warn("Authentication failed:", error.message);
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: error.statusCode || 401 }
+      );
+    }
+
+    // Handle authorization errors (403)
+    if (error instanceof AuthorizationError) {
+      console.warn("Authorization failed:", error.message);
+      return NextResponse.json(
+        { error: "Forbidden" },
         { status: 403 }
       );
     }
+
     console.error("Error creating product:", error);
     return NextResponse.json(
       { error: "Failed to create product" },
