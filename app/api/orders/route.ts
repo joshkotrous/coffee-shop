@@ -68,37 +68,49 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No items in cart" }, { status: 400 });
     }
 
+    // Aggregate quantities by product_id to prevent duplicate item bypass
+    const aggregatedItems = new Map<number, { quantity: number }>();
+    for (const item of items) {
+      const productId = item.product_id;
+      if (aggregatedItems.has(productId)) {
+        const existing = aggregatedItems.get(productId)!;
+        existing.quantity += item.quantity;
+      } else {
+        aggregatedItems.set(productId, { quantity: item.quantity });
+      }
+    }
+
     // Calculate total and create order
     let totalAmount = 0;
     const orderItems = [];
 
-    for (const item of items) {
+    for (const [productId, aggregated] of aggregatedItems) {
       const productResult = await query(
         "SELECT * FROM products WHERE id = $1",
-        [item.product_id]
+        [productId]
       );
       const product = productResult.rows[0];
 
       if (!product) {
         return NextResponse.json(
-          { error: `Product ${item.product_id} not found` },
+          { error: `Product ${productId} not found` },
           { status: 400 }
         );
       }
 
-      if (product.stock_quantity < item.quantity) {
+      if (product.stock_quantity < aggregated.quantity) {
         return NextResponse.json(
           { error: `Insufficient stock for ${product.name}` },
           { status: 400 }
         );
       }
 
-      const itemTotal = product.price * item.quantity;
+      const itemTotal = product.price * aggregated.quantity;
       totalAmount += itemTotal;
 
       orderItems.push({
-        product_id: item.product_id,
-        quantity: item.quantity,
+        product_id: productId,
+        quantity: aggregated.quantity,
         unit_price: product.price,
       });
     }
