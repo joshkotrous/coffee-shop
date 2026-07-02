@@ -34,7 +34,12 @@ export async function GET(request: NextRequest) {
     const result = await query(ordersQuery, queryParams);
 
     // Convert price fields to numbers
-    const orders = result.rows.map((order) => ({
+    interface Order {
+      total_amount: string;
+      items?: Array<{ unit_price: string; [key: string]: unknown }>;
+      [key: string]: unknown;
+    }
+    const orders = result.rows.map((order: Order) => ({
       ...order,
       total_amount: parseFloat(order.total_amount),
       items:
