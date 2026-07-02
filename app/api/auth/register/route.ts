@@ -18,11 +18,15 @@ export async function POST(request: NextRequest) {
     const existingUser = await query("SELECT id FROM users WHERE email = $1", [
       email,
     ]);
+    
+    // Prevent account enumeration by returning the same response regardless of account existence
+    const genericMessage = "If this email is not already registered, you will receive a confirmation email";
+    
     if (existingUser.rows.length > 0) {
-      return NextResponse.json(
-        { error: "User already exists" },
-        { status: 409 }
-      );
+      // Account already exists - return generic success message without creating duplicate
+      return NextResponse.json({
+        message: genericMessage,
+      });
     }
 
     // Hash password and create user
@@ -36,8 +40,7 @@ export async function POST(request: NextRequest) {
     const token = generateToken(user);
 
     const response = NextResponse.json({
-      message: "Registration successful",
-      user: { id: user.id, email: user.email, role: user.role },
+      message: genericMessage,
     });
 
     response.cookies.set("token", token, {
