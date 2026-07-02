@@ -18,8 +18,12 @@ export async function GET(request: NextRequest) {
     const result = await query(sqlQuery);
 
     // Convert price strings to numbers
+    interface Product {
+      price: string;
+      [key: string]: unknown;
+    }
     const products =
-      result?.rows?.map((product) => ({
+      result?.rows?.map((product: Product) => ({
         ...product,
         price: parseFloat(product.price),
       })) || [];
